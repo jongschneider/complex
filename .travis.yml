@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t jgschneider/complex -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run jgschneider/complex npm test -- --coverage
+
+after_success:
+  - docker build -t jgschneider/complex-client ./client
+  - docker build -t jgschneider/complex-nginx ./nginx
+  - docker build -t jgschneider/complex-server ./server
+  - docker build -t jgschneider/complex-worker ./worker
+  # Login to the Docker cli
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ID" --password-stdin
+  # Take these images and push them to Dockerhub
+  - docker push jgschneider/complex-client
+  - docker push jgschneider/complex-nginx
+  - docker push jgschneider/complex-server
+  - docker push jgschneider/complex-worker
